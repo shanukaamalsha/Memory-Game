@@ -28,9 +28,15 @@ A fun and interactive game that challenges your memory skills by matching pairs 
 ---
 
 ## 🚀 Getting Started
-
 1. **Clone the repo**
 
+## Stay Connected
+
+- 🔗 **Live Project:** https://infosphere-projects.netlify.app/
+- 🌐 **Infosphere Site:** https://infosphere-nexus.netlify.app/ 
+- 👤 **Facebook:** https://www.facebook.com/share/1C55BHgCG7/
+- ▶️ **YouTube Channel:** https://www.youtube.com/@infosphere_nexus
+  
 Happy Mind Exercising!!!
 
 

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Matching Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #f5af19, #f12711);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: #fff;
+    }
+    h1 {
+      margin: 20px;
+      text-shadow: 2px 2px 4px #000;
+      font-size: 4vw;
+      text-align: center;
+    }
+    #level {
+      font-size: 3vw;
+      margin-bottom: 10px;
+    }
+    #game-board {
+      display: grid;
+      grid-gap: 10px;
+      margin: 20px auto;
+      grid-template-columns: repeat(4, 1fr);
+      width: 100%;
+      max-width: 800px;
+    }
+    .card {
+      width: 100%;
+      height: 120px;
+      perspective: 1000px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.6s;
+    }
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateY(0deg);
+      transition: transform 0.6s;
+    }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+    }
+    .card-front {
+      background-color: #2ecc71;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .card-back {
+      background-size: cover;
+      background-position: center;
+      transform: rotateY(180deg);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    #music-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: url('https://cdn-icons-png.flaticon.com/512/727/727245.png') no-repeat center/cover;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  margin-top: 20px; 
+  margin-bottom: 20px;
+}
+
+#music-toggle.off {
+  background: url('https://cdn-icons-png.flaticon.com/512/727/727240.png') no-repeat center/cover;
+}
+
+    #restart {
+      padding: 10px 20px;
+      background-color: #3498db;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 2vw;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    #restart:hover {
+      background-color: #2980b9;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 6vw;
+      }
+      #level {
+        font-size: 5vw;
+      }
+      #game-board {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .card {
+        height: 100px;
+      }
+      #restart {
+        font-size: 3vw;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 8vw;
+      }
+      #level {
+        font-size: 6vw;
+      }
+      #game-board {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .card {
+        height: 80px;
+      }
+      #restart {
+        font-size: 4vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Memory Matching Game</h1>
+  <div id="level">Level: 1</div>
+  <div id="game-board"></div>
+  <button id="restart">Restart Game</button>
+  <button id="music-toggle"></button>
+
+  <audio id="bg-music" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-energy.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const imageURLs = [
+      "https://picsum.photos/100?random=1",
+      "https://picsum.photos/100?random=2",
+      "https://picsum.photos/100?random=3",
+      "https://picsum.photos/100?random=4",
+      "https://picsum.photos/100?random=5",
+      "https://picsum.photos/100?random=6",
+      "https://picsum.photos/100?random=7",
+      "https://picsum.photos/100?random=8",
+      "https://picsum.photos/100?random=9",
+      "https://picsum.photos/100?random=10"
+    ];
+
+    let currentLevel = 1;
+    const gameBoard = document.getElementById("game-board");
+    const levelText = document.getElementById("level");
+    const restartButton = document.getElementById("restart");
+    const musicToggleButton = document.getElementById("music-toggle");
+    const bgMusic = document.getElementById("bg-music");
+
+    let musicPlaying = true;
+    let flippedCards = [];
+    let matchedCards = 0;
+    let cards = [];
+
+    bgMusic.play();
+
+    musicToggleButton.addEventListener("click", () => {
+      musicPlaying = !musicPlaying;
+      musicToggleButton.classList.toggle("off");
+      musicPlaying ? bgMusic.play() : bgMusic.pause();
+    });
+
+    function createCards(level) {
+      let totalCards;
+      switch(level) {
+        case 1:
+          totalCards = 4;
+          break;
+        case 2:
+          totalCards = 9;
+          break;
+        case 3:
+          totalCards = 12;
+          break;
+        case 4:
+          totalCards = 16;
+          break;
+        case 5:
+          totalCards = 20;
+          break;
+      }
+
+      const selectedImages = imageURLs.slice(0, totalCards / 2);
+      cards = [...selectedImages, ...selectedImages]
+        .sort(() => Math.random() - 0.5)
+        .map((src, index) => ({ id: index, src }));
+
+      const rows = Math.ceil(totalCards / 4);
+      gameBoard.style.gridTemplateColumns = `repeat(4, 1fr)`;
+    }
+
+    function createCard(card) {
+      const cardElement = document.createElement("div");
+      cardElement.classList.add("card");
+      cardElement.innerHTML = ` 
+        <div class="card-inner">
+          <div class="card-front">?</div>
+          <div class="card-back" style="background-image: url('${card.src}')"></div>
+        </div>
+      `;
+      cardElement.addEventListener("click", () => flipCard(card, cardElement));
+      return cardElement;
+    }
+
+    function flipCard(card, cardElement) {
+      if (flippedCards.length === 2 || cardElement.classList.contains("flipped")) return;
+
+      cardElement.classList.add("flipped");
+      flippedCards.push({ card, cardElement });
+
+      if (flippedCards.length === 2) checkMatch();
+    }
+
+    function checkMatch() {
+      const [first, second] = flippedCards;
+
+      if (first.card.src === second.card.src) {
+        matchedCards += 2;
+        flippedCards = [];
+
+        if (matchedCards === cards.length) {
+          if (currentLevel === 5) {
+            setTimeout(() => alert("You completed all levels!"), 500);
+          } else {
+            setTimeout(() => nextLevel(), 1000);
+          }
+        }
+      } else {
+        setTimeout(() => {
+          first.cardElement.classList.remove("flipped");
+          second.cardElement.classList.remove("flipped");
+          flippedCards = [];
+        }, 1000);
+      }
+    }
+
+    function nextLevel() {
+      currentLevel++;
+      matchedCards = 0;
+      createCards(currentLevel);
+      gameBoard.innerHTML = "";
+      cards.forEach(card => gameBoard.appendChild(createCard(card)));
+      levelText.innerText = `Level: ${currentLevel}`;
+    }
+
+    restartButton.addEventListener("click", () => {
+      currentLevel = 1;
+      initializeGame();
+    });
+
+    function initializeGame() {
+      matchedCards = 0;
+      createCards(currentLevel);
+      gameBoard.innerHTML = "";
+      cards.forEach(card => gameBoard.appendChild(createCard(card)));
+      levelText.innerText = `Level: ${currentLevel}`;
+    }
+
+    initializeGame();
+  </script>
+</body>
+</html>
